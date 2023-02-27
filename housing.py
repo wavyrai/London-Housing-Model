@@ -404,8 +404,9 @@ plt.title('KNN', fontsize= 20, **csfont)
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
 plt.plot(y_test,p(y_test), color='magenta')
-plt.show()
 plt.savefig('knn.jpg', dpi=300) 
+plt.show()
+
 
 
 
@@ -427,8 +428,9 @@ plt.xlabel('Training examples', **hfont)
 plt.ylabel('Score', **hfont)
 plt.title('Learning Curve', fontsize=20, **csfont)
 plt.legend(loc="best")
-plt.show()
 plt.savefig('knn_learning.jpg', dpi=300) 
+plt.show()
+
 
 # LightGBM
 
@@ -467,8 +469,9 @@ plt.title('LGBM', fontsize= 20, **csfont)
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
 plt.plot(y_test,p(y_test), color='orange')
-plt.show()
 plt.savefig('lgbm.jpg', dpi=300) 
+plt.show()
+
 
 
 
@@ -490,8 +493,9 @@ plt.xlabel('Training examples', **hfont)
 plt.ylabel('Score', **hfont)
 plt.title('Learning Curve', fontsize=20, **csfont)
 plt.legend(loc="best")
-plt.show()
 plt.savefig('lgbm_learning.jpg', dpi=300) 
+plt.show()
+
 
 # Random forest
 from sklearn.model_selection import GridSearchCV
@@ -530,8 +534,9 @@ plt.title('Random Forest', fontsize= 20, **csfont)
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
 plt.plot(y_test,p(y_test), color='orange')
-plt.show()
 plt.savefig('random_forest.jpg', dpi=300) 
+plt.show()
+
 
 from sklearn.model_selection import learning_curve 
 
@@ -553,5 +558,6 @@ plt.xlabel('Training examples', **hfont)
 plt.ylabel('Score', **hfont)
 plt.title('Learning Curve', fontsize=20, **csfont)
 plt.legend(loc="best")
-plt.show()
 plt.savefig('random_forest_learning.jpg', dpi=300) 
+plt.show()
+
