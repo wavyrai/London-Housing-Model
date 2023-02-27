@@ -1,18 +1,41 @@
+## Author: Thijs Verreck
+## Importing all the necessary libraries
 
 import numpy as np
 import pandas as pd
 from pandas.plotting import scatter_matrix
 import geopandas as gpd
 import matplotlib.pyplot as plt
+# Set the fonts for the plots
+bodyfont = {'fontname':'Helvetica'} # Body font 
+titlefont = {'fontname':'Futura'} # Title font
 
 import seaborn as sns
 from IPython.display import HTML
 import warnings
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore') # get rid of annoying warnings
 import plotly.express as px
 import geopandas as gpd
-hfont = {'fontname':'Helvetica'}
-csfont = {'fontname':'Futura'}
+
+# Importing the necessary libraries for the machine learning part
+from sklearn.model_selection import GridSearchCV
+from  sklearn.model_selection import train_test_split 
+from sklearn.model_selection import GridSearchCV
+from sklearn.utils.validation import check_array
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from lightgbm import LGBMRegressor
+from sklearn.metrics import mean_absolute_error 
+from sklearn.metrics import mean_squared_error, r2_score  
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import learning_curve  
+
+
+## Importing the data
 
 # Read the data
 london_monthly = pd.read_csv('housing_in_london_monthly_variables.csv', parse_dates = ['date'])
@@ -49,7 +72,6 @@ london_monthly['year'].max()
 
 # Read the shapefile data into a GeoDataFrame 
 london_map = gpd.read_file('London_Wards/Boroughs/London_Borough_Excluding_MHW.shp')
-
 london_boroughs = london_monthly[london_monthly['borough_flag'] == 1]['area'].unique()
 len(london_boroughs)
 
@@ -63,7 +85,6 @@ print(london_monthly[london_monthly['borough_flag'] == 0]['area'].unique())
 
 # Let's get rid of the non-english regions. 
 england_regions = ['south west', 'south east', 'east of england', 'west midlands', 'east midlands', 'yorks and the humber', 'north west', 'north east']
-
 london = london_monthly[london_monthly['area'].isin(london_boroughs)]
 england = london_monthly[london_monthly['area'].isin(england_regions)]
 
@@ -71,19 +92,20 @@ england = london_monthly[london_monthly['area'].isin(england_regions)]
 london_price = london.groupby('date')['average_price'].mean()
 england_price = england.groupby('date')['average_price'].mean()
 
+# Plot the time evolution of the average house price in London and England
 plt.figure(figsize = (10, 5))
 font_size = 14
 london_price.plot(y = 'average_price', color = 'navy', lw = 2, label = 'London')
 england_price.plot(y = 'average_price', color = 'darkorange', lw = 2, label = 'England')
 plt.axvspan('2007-07-01', '2009-06-21', alpha = 0.5, color = '#E57715')
-plt.text(x = '2008-05-01', y = 390000, s = 'The GFC', rotation = 90, fontsize = font_size-2, **hfont)
+plt.text(x = '2008-05-01', y = 390000, s = 'The GFC', rotation = 90, fontsize = font_size-2, **bodyfont)
 plt.axvline(x = '2016-06-23', lw = 2, color = 'darkblue', linestyle = '--')
-plt.text(x = '2015-11-01', y = 210000, s = 'Brexit Referendum', rotation = 90, fontsize = font_size-2, **hfont)
-plt.title('Time evolution of the average house price', size = font_size, **csfont)
-plt.ylabel('Average Price', size = font_size, **hfont)
-plt.xticks(size = font_size - 3, **hfont)
-plt.xlabel('Date', size = font_size, **hfont)
-plt.yticks(size = font_size - 3, **hfont)
+plt.text(x = '2015-11-01', y = 210000, s = 'Brexit Referendum', rotation = 90, fontsize = font_size-2, **bodyfont)
+plt.title('Time evolution of the average house price', size = font_size, **titlefont)
+plt.ylabel('Average Price', size = font_size, **bodyfont)
+plt.xticks(size = font_size - 3, **bodyfont)
+plt.xlabel('Date', size = font_size, **bodyfont)
+plt.yticks(size = font_size - 3, **bodyfont)
 plt.legend(fontsize = font_size - 3, loc = 'lower right')
 plt.savefig('time_evolution_of_average_house_price.jpg', dpi=300) 
 
@@ -92,12 +114,10 @@ test = px.line(london_monthly, x="date", y="average_price", color='area', templa
 test.update_layout(title_font_family='Futura', xaxis=dict(title_font_family='Futura'), yaxis=dict(title_font_family='Futura'))
 test.show()
 test.write_json('fig2.json')
-
+# and a boxplot
 fig = px.box(london_monthly, x="average_price", template='simple_white', title='Average house price (1995 - 2020)',
              width=700, height=500, color='borough_flag')
 fig.update_layout(title_font_family='Futura', xaxis=dict(title_font_family='Futura'), yaxis=dict(title_font_family='Futura'))
-
-
 fig.write_json('fig1.json')
 fig.show()
 
@@ -112,31 +132,29 @@ london_top5_prices.head(5).sort_values(by = 'average_price', ascending = True).p
                                                                                color = 'bisque', edgecolor = 'sandybrown',
                                                                                legend = False)
 
-plt.title('Average price in the 5 most expensive London boroughs (1995-2019)', size = font_size, y = 1.05, **csfont)
-plt.ylabel('London Borough', size = font_size, **hfont)
-plt.yticks(size = font_size - 3, **hfont)
-plt.xlabel('Average Price', size = font_size, **hfont)
-plt.xticks([0, 200_000, 400_000, 600_000], size = font_size - 3, **hfont);
+plt.title('Average price in the 5 most expensive London boroughs (1995-2019)', size = font_size, y = 1.05, **titlefont)
+plt.ylabel('London Borough', size = font_size, **bodyfont)
+plt.yticks(size = font_size - 3, **bodyfont)
+plt.xlabel('Average Price', size = font_size, **bodyfont)
+plt.xticks([0, 200_000, 400_000, 600_000], size = font_size - 3, **bodyfont);
 plt.savefig('average_price_in_the_5_most_expensive_london_boroughs.jpg', dpi=300) 
-
-top5_indeces = london_top5_prices.head().index
+top5 = london_top5_prices.head().index
 
 
 # Plot the average price in the 5 most expensive London boroughs over time
-
 colors = sns.color_palette("icefire") # I like this color palette :)
 plt.figure(figsize = (10, 5))
 
-for index, i in enumerate(top5_indeces):
+for index, i in enumerate(top5):
     df = london[london['area'] == i]
     df = df.groupby('date')['average_price'].mean()
     
     df.plot(y = 'average_price', label = i, color = colors[index])
        
-plt.title('Average price in the most expensive boroughs', y = 1.04, size = font_size, **csfont)
-plt.xlabel('Date', size = font_size, **hfont)
-plt.xticks(size = font_size - 3, **hfont)
-plt.ylabel('Average Price', size = font_size, **hfont)
+plt.title('Average price in the most expensive boroughs', y = 1.04, size = font_size, **titlefont)
+plt.xlabel('Date', size = font_size, **bodyfont)
+plt.xticks(size = font_size - 3, **bodyfont)
+plt.ylabel('Average Price', size = font_size, **bodyfont)
 plt.yticks([0.2*1E+6, 0.6*1E+6, 1.0*1E+6, 1.4*1E+6], size = font_size - 3)
 plt.legend(fontsize = font_size - 5);
 plt.savefig('average_price_in_the_most_expensive_boroughs.jpg', dpi=300) 
@@ -144,18 +162,16 @@ plt.savefig('average_price_in_the_most_expensive_boroughs.jpg', dpi=300)
 # Let's do the same thing for the most expensive English regions
 england_prices = england.groupby('area')['average_price'].mean()
 england_top3_prices = england_prices.sort_values(ascending = False).to_frame()
-
-top3_indeces = england_top3_prices.head(3).index
+top3 = england_top3_prices.head(3).index
 colors = sns.color_palette("icefire")
 
-plt.figure(figsize = (9, 5))
-
-for index, i in enumerate(top3_indeces):
+plt.figure(figsize = (10, 5))
+for index, i in enumerate(top3):
     df = england[england['area'] == i]
     df = df.groupby('date')['average_price'].mean()
     df.plot(y = 'average_price', label = i, color = colors[index])
 
-plt.title('Average price in the most expensive English regions by date', size = font_size, y = 1.04, **csfont)
+plt.title('Average price in the most expensive English regions by date', size = font_size, y = 1.04, **titlefont)
 plt.xlabel('Date', size = font_size)
 plt.xticks(size = font_size - 3)
 plt.ylabel('Average Price', size = font_size)
@@ -163,48 +179,49 @@ plt.yticks([100_000, 200_000, 300_000], size = font_size - 3)
 plt.legend(fontsize = font_size - 3);
 plt.savefig('average_price_in_most_expensive_english_regions_by_date.jpg', dpi=300) 
 
-# And now let's compare the cheapest london boroughs with the most expensive English regions
+# And now let's compare the cheapest London borough with the most expensive English regions
 
 plt.figure(figsize = (10, 5))
-
-for index, i in enumerate(top3_indeces):
+for index, i in enumerate(top3):
     df_ = england[england['area'] == i]
     df_ = df_.groupby('date')['average_price'].mean()
     df_.plot(y = 'average_price', label = i, color = colors[index], lw = 2, linestyle = '-')
 
-london_bng_pr = london[london['area'] == 'barking and dagenham'].groupby('date')['average_price'].mean()
-london_bng_pr.plot(y = 'average_price', lw = 2, linestyle = '--', color = '#A30015', label = 'barking and dagenham')
+london_barking_price = london[london['area'] == 'barking and dagenham'].groupby('date')['average_price'].mean()
+london_barking_price.plot(y = 'average_price', lw = 2, linestyle = '--', color = '#A30015', label = 'Barking and Dagenham')
 
-plt.title('The 3 most expensive English areas + Barking and Dagenham', size = font_size, y = 1.06, **csfont)
-plt.xlabel('Date', size = font_size, **hfont)
-plt.xticks(size = font_size - 3, **hfont)
-plt.ylabel('Average Price', size = font_size, **hfont)
-plt.yticks([0.1*1E+6, 0.2*1E+6, 0.3*1E+6], size = font_size - 3, **hfont)
+plt.title('The 3 most expensive English areas + Barking and Dagenham', size = font_size, y = 1.06, **titlefont)
+plt.xlabel('Date', size = font_size, **bodyfont)
+plt.xticks(size = font_size - 3, **bodyfont)
+plt.ylabel('Average Price', size = font_size, **bodyfont)
+plt.yticks([0.1*1E+6, 0.2*1E+6, 0.3*1E+6], size = font_size - 3, **bodyfont)
 plt.legend(labels = ['South East (Eng)', 'East of England (Eng)', 'South West (Eng)', 'Barking and Dagenham (L)'], 
            fontsize = font_size - 3);
+plt.savefig('3_most_expensive_eng+barkinganddagenham.jpg', dpi=300) 
+plt.show
 
-plt.savefig('3_most_expensive_eng+barkanddagenham.jpg', dpi=300) 
-
+# Let's see how the number of houses sold in London has changed over time 
+plt.figure(figsize = (10, 5))
 london_houses = london.groupby('date')['houses_sold'].sum()
 london_houses.plot(figsize = (9, 5), lw = 2, y = 'houses_sold', color = '#00072D')
 
 plt.axvspan('2007-12-21', '2009-06-21', alpha = 0.5, color = '#F08700')
-plt.text(x = '2008-04-01', y = 10700, s = 'Recession', rotation = 90, fontsize = font_size-2)
+plt.text(x = '2008-04-01', y = 10700, s = 'Recession', rotation = 90, fontsize = font_size-2, **bodyfont)
 plt.axvspan('2016-01-1', '2016-05-01', alpha = 0.7, color = '#FFCAAF')
+plt.text(x = '2016-06-01', y = 10000, s = 'New Tax Legislation', rotation = 90, fontsize = font_size-2, **bodyfont)
 
-# plt.axvline(x = '2016-06-23', lw = 2, color = '#E57715', linestyle = '--')
-plt.text(x = '2016-06-01', y = 10000, s = 'New tax legislation', rotation = 90, fontsize = font_size-2)
-
-plt.title('Houses sold in London by date', size = font_size, **csfont)
-plt.xlabel('Date', size = font_size, **hfont)
-plt.xticks(size = font_size - 3)
-plt.ylabel('Houses sold', size = font_size, **hfont)
-plt.yticks([4000, 8000, 12000, 16000], size = font_size - 3);
+plt.title('Houses sold in London by date', size = font_size, **titlefont)
+plt.xlabel('Date', size = font_size, **bodyfont)
+plt.xticks(size = font_size - 3, **bodyfont)
+plt.ylabel('Houses sold', size = font_size, **bodyfont)
+plt.yticks([4000, 8000, 12000, 16000], size = font_size - 3, **bodyfont)
 plt.savefig('houses_sold_lnd_date.jpg', dpi=300) 
 
 london_borough_houses = london.groupby('area')['houses_sold'].sum()
 london_top5_houses = london_borough_houses.sort_values(ascending = False).to_frame()
 london_top5_houses.head(5)
+
+## Time for some maps!
 
 # Read the shapefile data into a GeoDataFrame 
 london_map = gpd.read_file('London_Wards/Boroughs/London_Borough_Excluding_MHW.shp')
@@ -215,6 +232,7 @@ london_map.columns = london_map.columns.str.lower()
 # Print the first few rows of the GeoDataFrame
 print(london_map.head()) 
 
+# Getting ready to merge the dataframes
 london_map['name'] = london_map['name'].str.lower()
 london_map.rename(columns = {'name': 'area'}, inplace = True)
 london_map.rename(columns = {'gss_code': 'code'}, inplace = True)
@@ -222,27 +240,29 @@ london_map.rename(columns = {'gss_code': 'code'}, inplace = True)
 london_map = london_map[['area', 'code', 'hectares', 'geometry']]
 london_map.head()
 
-london_map_2 = london.groupby('area').agg({'average_price': ['mean'], 'houses_sold': 'sum'})
+london_geo_data = london.groupby('area').agg({'average_price': ['mean'], 'houses_sold': 'sum'})
 
-london_map_2.columns = ['average_price', 'houses_sold']
-london_map_2.reset_index(inplace = True)
-london_map_2.head()
+london_geo_data.columns = ['average_price', 'houses_sold']
+london_geo_data.reset_index(inplace = True)
+london_geo_data.head()
 
-np.intersect1d(london_map['area'], london_map_2['area']).size
+# Check if the areas in the two dataframes are the same
+np.intersect1d(london_map['area'], london_geo_data['area']).size
 
-london_map = pd.merge(london_map, london_map_2, how = 'inner', on = ['area'])
+# Merge the two dataframes
+london_map = pd.merge(london_map, london_geo_data, how = 'inner', on = ['area'])
 london_map.head()
 
-fig, ax = plt.subplots(1, 2, figsize = (15, 12))
+fig, htmap = plt.subplots(1, 2, figsize = (15, 12))
 
-london_map.plot(ax = ax[0], column = 'average_price', cmap = 'Oranges', edgecolor = 'maroon', legend = True, legend_kwds = {'label': 'Average Price', 'orientation' : 'horizontal'})
+london_map.plot(ax = htmap[0], column = 'average_price', cmap = 'Oranges', edgecolor = 'maroon', legend = True, legend_kwds = {'label': 'Average Price', 'orientation' : 'horizontal'})
 
-london_map.plot(ax = ax[1], column = 'houses_sold', cmap = 'Greens', edgecolor = 'maroon', legend = True, legend_kwds = {'label': 'Houses Sold', 'orientation' : 'horizontal'})
+london_map.plot(ax = htmap[1], column = 'houses_sold', cmap = 'Greens', edgecolor = 'maroon', legend = True, legend_kwds = {'label': 'Houses Sold', 'orientation' : 'horizontal'})
 
-ax[0].axis('off')
-ax[0].set_title('Average House Price (All years)', size = font_size, **csfont)
-ax[1].axis('off')
-ax[1].set_title('Houses Sold (All years)', size = font_size, **csfont);
+htmap[0].axis('off')
+htmap[0].set_title('Average House Price (All years)', size = font_size, **titlefont)
+htmap[1].axis('off')
+htmap[1].set_title('Houses Sold (All years)', size = font_size, **titlefont);
 
 plt.savefig('geomap.jpg', dpi=300) 
 
@@ -269,66 +289,43 @@ print ('yearly_variables dataset')
 print ('\tFirst date: ', london_yearly['year'].min())
 print ('\tFinal date: ', london_yearly['year'].max())
 
-lnd_m_group = london.groupby(['area', 'year']).mean().reset_index()  # group based on area and year (take mean)
-lnd_m_group = lnd_m_group[lnd_m_group['year'] >= 1999]            # select all years after 1999 (included)
+london_monthly_grouped = london.groupby(['area', 'year']).mean().reset_index()  # group based on area and year (take mean)
+london_monthly_grouped = london_monthly_grouped[london_monthly_grouped['year'] >= 1999]            # select all years after 1999 (included)
 
 print ('monthly_variables dataset')
-print ('\tFirst date: ', lnd_m_group['year'].min())
-print ('\tFinal date: ', lnd_m_group['year'].max())
+print ('\tFirst date: ', london_monthly_grouped['year'].min())
+print ('\tFinal date: ', london_monthly_grouped['year'].max())
 
-lnd_y_group = london_yearly.groupby(['area', 'year']).mean().reset_index() # group it based on area and year
-lnd_y_group.head()
+london_yearly_group = london_yearly.groupby(['area', 'year']).mean().reset_index() # group it based on area and year
+london_yearly_group.head()
 
-lnd_total = pd.merge(lnd_y_group, lnd_m_group, on = ['area', 'year'], how = 'left')
-lnd_total.drop(['borough_flag_x', 'borough_flag_y'], axis = 1, inplace = True)
+london_total = pd.merge(london_yearly_group, london_monthly_grouped, on = ['area', 'year'], how = 'left')
+london_total.drop(['borough_flag_x', 'borough_flag_y'], axis = 1, inplace = True)
 
-lnd_total.head()
+london_total.head()
 
-corr_table = lnd_total.corr()
+corr_table = london_total.corr()
 corr_table['average_price'].sort_values(ascending = False)
 
 plt.figure(figsize = (10, 8))
 
 mask = np.triu(np.ones_like(corr_table, dtype = np.bool))
 
-ax = sns.heatmap(corr_table, mask = mask, annot = True, cmap = 'rocket')
-ax.set_title('Heatmap of pairwise correlations', size = font_size, **csfont)
-ax.set_xticklabels(ax.get_xticklabels(), rotation = 45, horizontalalignment = 'right', size = font_size - 3, **hfont)
-ax.set_yticklabels(ax.get_yticklabels(), rotation = 0, horizontalalignment = 'right', size = font_size - 3, **hfont);
-bottom, top = ax.get_ylim()
-ax.set_ylim(bottom + 0.5, top - 0.5);
+htmap = sns.heatmap(corr_table, mask = mask, annot = True, cmap = 'rocket')
+htmap.set_title('Heatmap of pairwise correlations', size = font_size, **titlefont)
+htmap.set_xticklabels(htmap.get_xticklabels(), rotation = 45, horizontalalignment = 'right', size = font_size - 3, **bodyfont)
+htmap.set_yticklabels(htmap.get_yticklabels(), rotation = 0, horizontalalignment = 'right', size = font_size - 3, **bodyfont);
+bottom, top = htmap.get_ylim()
+htmap.set_ylim(bottom + 0.5, top - 0.5);
 
 plt.savefig('heatmap_of_pairwise_corr.jpg', dpi=300) 
 
 columns = ['average_price', 'median_salary', 'mean_salary', 'number_of_jobs']
 
-scatter_matrix(lnd_total[columns], figsize = (15, 15), color = '#D52B06', alpha = 0.3, 
+scatter_matrix(london_total[columns], figsize = (15, 15), color = '#D52B06', alpha = 0.3, 
                hist_kwds = {'color':['bisque'], 'edgecolor': 'firebrick'}, s = 100, marker = 'o', diagonal = 'hist');
 
-
-
-# import libraries
-
-from  sklearn.model_selection import train_test_split 
-from sklearn.model_selection import GridSearchCV
-from sklearn.utils.validation import check_array
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import OneHotEncoder
-
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from lightgbm import LGBMRegressor
-
-
-from sklearn.metrics import mean_absolute_error 
-from sklearn.metrics import mean_squared_error, r2_score  
-from sklearn.metrics import confusion_matrix
-
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import learning_curve  
-
+## ML modelling 
 # Preprocessing data
 
 def preprocessing_data(df = london_monthly, training_size = 0.8):
@@ -365,7 +362,7 @@ def preprocessing_data(df = london_monthly, training_size = 0.8):
 x_train, x_test, y_train, y_test = preprocessing_data()
 
 
-# K-Nearest Neighbours
+## K-Nearest Neighbours
 knn = KNeighborsRegressor()
 parameters = {'n_neighbors' : [2, 3, 5, 7],
                'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'] ,
@@ -394,22 +391,21 @@ print("RMSE:", rmse)
 r2 = r2_score(y_test, predictions)
 print("R2:", r2)
 
+
 # Plot predicted vs actual
 plt.figure(figsize=(7, 4)) 
-plt.scatter(y_test, predictions)
-plt.xlabel('Actual Labels', **hfont)
-plt.ylabel('Predicted Labels', **hfont)
-plt.title('KNN', fontsize= 20, **csfont)
+plt.scatter(y_test, predictions, color='darkorange', alpha=0.5)
+plt.xlabel('Actual Labels', **bodyfont)
+plt.ylabel('Predicted Labels', **bodyfont)
+plt.title('KNN', fontsize= 20, **titlefont)
 # overlay the regression line
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
-plt.plot(y_test,p(y_test), color='magenta')
+plt.plot(y_test,p(y_test), color='navy', linewidth=2, label='Regression Line')
 plt.savefig('knn.jpg', dpi=300) 
 plt.show()
 
-
-
-
+# Plot KNN learning curve
 train_sizes, train_scores, test_scores = learning_curve(
     estimator=knn_ft, X=x_train, y=y_train, cv=5, n_jobs=-1,
     train_sizes=np.linspace(0.1, 1.0, 10), scoring='neg_mean_squared_error')
@@ -420,19 +416,19 @@ test_scores_mean = np.mean(test_scores, axis=1)
 test_scores_std = np.std(test_scores, axis=1)
 
 plt.figure(figsize=(7, 4))
-plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="r")
-plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="g")
-plt.plot(train_sizes, train_scores_mean, 'o-', color="r", label="Training score")
-plt.plot(train_sizes, test_scores_mean, 'o-', color="g", label="Cross-validation score")
-plt.xlabel('Training examples', **hfont)
-plt.ylabel('Score', **hfont)
-plt.title('Learning Curve', fontsize=20, **csfont)
+plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="steelblue")
+plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="orange")
+plt.plot(train_sizes, train_scores_mean, 'o-', color="steelblue", label="Training score")
+plt.plot(train_sizes, test_scores_mean, 'o-', color="orange", label="Cross-validation score")
+plt.xlabel('Training examples', **bodyfont)
+plt.ylabel('Score', **bodyfont)
+plt.title('KNN Model Learning Curve', fontsize=20, **titlefont)
 plt.legend(loc="best")
 plt.savefig('knn_learning.jpg', dpi=300) 
 plt.show()
 
 
-# LightGBM
+## LightGBM
 
 lgbm = LGBMRegressor()
 parameters = {'boosting_type' : ['gbdt', "dart", 'goss'],
@@ -461,19 +457,19 @@ print("R2:", r2)
 
 # Plot predicted vs actual
 plt.figure(figsize=(7, 4)) 
-plt.scatter(y_test, predictions, color = 'steelblue')
-plt.xlabel('Actual Labels', **hfont)
-plt.ylabel('Predicted Labels', **hfont)
-plt.title('LGBM', fontsize= 20, **csfont)
+plt.scatter(y_test, predictions, color = 'darkorange', alpha=0.5)
+plt.xlabel('Actual Labels', **bodyfont)
+plt.ylabel('Predicted Labels', **bodyfont)
+plt.title('LGBM', fontsize= 20, **titlefont)
 # overlay the regression line
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
-plt.plot(y_test,p(y_test), color='orange')
+plt.plot(y_test,p(y_test), color='navy', linewidth=2, label='Regression Line')
 plt.savefig('lgbm.jpg', dpi=300) 
 plt.show()
 
 
-
+# Plot LGBM learning curve
 
 train_sizes, train_scores, test_scores = learning_curve(
     estimator=lgbm_ft, X=x_train, y=y_train, cv=5, n_jobs=-1,
@@ -485,21 +481,19 @@ test_scores_mean = np.mean(test_scores, axis=1)
 test_scores_std = np.std(test_scores, axis=1)
 
 plt.figure(figsize=(7, 4))
-plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="r")
-plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="g")
-plt.plot(train_sizes, train_scores_mean, 'o-', color="r", label="Training score")
-plt.plot(train_sizes, test_scores_mean, 'o-', color="g", label="Cross-validation score")
-plt.xlabel('Training examples', **hfont)
-plt.ylabel('Score', **hfont)
-plt.title('Learning Curve', fontsize=20, **csfont)
+plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="steelblue")
+plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="orange")
+plt.plot(train_sizes, train_scores_mean, 'o-', color="steelblue", label="Training score")
+plt.plot(train_sizes, test_scores_mean, 'o-', color="orange", label="Cross-validation score")
+plt.xlabel('Training examples', **bodyfont)
+plt.ylabel('Score', **bodyfont)
+plt.title('LGBM Learning Curve', fontsize=20, **titlefont)
 plt.legend(loc="best")
 plt.savefig('lgbm_learning.jpg', dpi=300) 
 plt.show()
 
 
-# Random forest
-from sklearn.model_selection import GridSearchCV
-
+## Random Forest
 rfm = RandomForestRegressor()
 parameters = {    'n_estimators' : [None, 100 , 500, 1000],
                   'max_depth'    : [2, 3, 5, None]
@@ -526,19 +520,18 @@ print("R2:", r2)
 
 # Plot predicted vs actual
 plt.figure(figsize=(7, 4)) 
-plt.scatter(y_test, predictions, color = 'steelblue')
-plt.xlabel('Actual Labels', **hfont)
-plt.ylabel('Predicted Labels', **hfont)
-plt.title('Random Forest', fontsize= 20, **csfont)
+plt.scatter(y_test, predictions, color = 'darkorange', alpha=0.5)
+plt.xlabel('Actual Labels', **bodyfont)
+plt.ylabel('Predicted Labels', **bodyfont)
+plt.title('Random Forest', fontsize= 20, **titlefont)
 # overlay the regression line
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
-plt.plot(y_test,p(y_test), color='orange')
+plt.plot(y_test,p(y_test), color='navy', linewidth=2, label='Regression Line')
 plt.savefig('random_forest.jpg', dpi=300) 
 plt.show()
 
-
-from sklearn.model_selection import learning_curve 
+# Plot Random Forest learning curve
 
 train_sizes, train_scores, test_scores = learning_curve(
     estimator=rfm_ft, X=x_train, y=y_train, cv=5, n_jobs=-1,
@@ -550,13 +543,13 @@ test_scores_mean = np.mean(test_scores, axis=1)
 test_scores_std = np.std(test_scores, axis=1)
 
 plt.figure(figsize=(7, 4))
-plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="r")
-plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="g")
-plt.plot(train_sizes, train_scores_mean, 'o-', color="r", label="Training score")
-plt.plot(train_sizes, test_scores_mean, 'o-', color="g", label="Cross-validation score")
-plt.xlabel('Training examples', **hfont)
-plt.ylabel('Score', **hfont)
-plt.title('Learning Curve', fontsize=20, **csfont)
+plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="steelblue")
+plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="orange")
+plt.plot(train_sizes, train_scores_mean, 'o-', color="steelblue", label="Training score")
+plt.plot(train_sizes, test_scores_mean, 'o-', color="orange", label="Cross-validation score")
+plt.xlabel('Training examples', **bodyfont)
+plt.ylabel('Score', **bodyfont)
+plt.title(' Random Forest Learning Curve', fontsize=20, **titlefont)
 plt.legend(loc="best")
 plt.savefig('random_forest_learning.jpg', dpi=300) 
 plt.show()
