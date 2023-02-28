@@ -1,6 +1,7 @@
 # London Housing Data Analysis
 
-![alt text](geomap.jpg | width=50)
+
+<img src="geomap_git.png"  width="600" >
 
 This repository contains code and data files for analyzing London housing data. The data was collected from the London House Prices dataset by Justin Cirtautas [(check it here)](https://www.kaggle.com/code/justinas/house-prices-in-london/notebook) and contains information on housing prices, sales, and other related factors.
 
