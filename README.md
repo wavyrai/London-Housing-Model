@@ -47,4 +47,4 @@ You can use the following steps to set up a virtual environment using venv:
 After setting up the virtual environment, you can run the code in the Jupyter notebook or using Python scripts.
 
 # Author
-- This repository was created by [Thijs Verreck](thijsverreck.com).
+- This repository was created by [Thijs Verreck](twitter.com/thijsverreck).
