@@ -307,7 +307,7 @@ london_total.head()
 corr_table = london_total.corr()
 corr_table['average_price'].sort_values(ascending = False)
 
-plt.figure(figsize = (10, 8))
+plt.figure(figsize = (15, 11))
 
 mask = np.triu(np.ones_like(corr_table, dtype = np.bool))
 
