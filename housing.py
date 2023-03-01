@@ -54,7 +54,7 @@ london_monthly_zero = london_monthly.isnull().sum().sort_values(ascending = Fals
 percent = (london_monthly.isnull().sum()/london_monthly.isnull().count()).sort_values(ascending = False)*100
 london_monthly_zero = pd.concat([london_monthly_zero, percent], axis = 1, keys = ['Counts', '% Missing'])
 print ('These columns have missing data: ')
-london_monthly_zero.head(5) # 
+london_monthly_zero.head(5) #                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 
 # get rid off the 'no_of_crimes' column, because it has too many missing values
 london_monthly.drop('no_of_crimes', axis = 1, inplace = True)   
@@ -332,26 +332,26 @@ scatter_matrix(london_total[columns], figsize = (15, 15), color = '#D52B06', alp
                hist_kwds = {'color':['bisque'], 'edgecolor': 'firebrick'}, s = 100, marker = 'o', diagonal = 'hist');
 
 ## ML modelling 
-# Preprocessing data
+# Preparing the data and splitting it into train and test sets
 
-def preprocessing_data(df = london_monthly, training_size = 0.75):
+def preparing_data_for_ML(df = london_monthly, training_size = 0.75):
   # Drop unneccessary features
-  df_predict = df.drop(columns =['code','houses_sold','borough_flag'])
+  prepared_df = df.drop(columns =['houses_sold','borough_flag', 'code'])
 
   # Extract date feature
-  df_predict['year'] = df_predict['date'].apply(lambda x: x.year)
-  df_predict['month'] = df_predict['date'].apply(lambda x: x.month)
-  df_predict = df_predict.drop(columns =['date'])
+  prepared_df['year'] = prepared_df['date'].apply(lambda x: x.year)
+  prepared_df['month'] = prepared_df['date'].apply(lambda x: x.month)
+  prepared_df = prepared_df.drop(columns =['date'])
 
   # one hot encoding
-  ohe = pd.get_dummies(df_predict['area'], drop_first= True)
-  df_predict = pd.concat([df_predict,ohe], axis =1)
-  df_predict = df_predict.drop(columns =['area'], axis =1)
+  ohe = pd.get_dummies(prepared_df['area'], drop_first= True)
+  prepared_df = pd.concat([prepared_df,ohe], axis =1)
+  prepared_df = prepared_df.drop(columns =['area'], axis =1)
  
 
   # Given x, y 
-  x = df_predict.drop(columns = ['average_price'])
-  y = df_predict['average_price']
+  x = prepared_df.drop(columns = ['average_price'])
+  y = prepared_df['average_price']
 
 
   # Train-test split (train data 80%)
@@ -365,7 +365,8 @@ def preprocessing_data(df = london_monthly, training_size = 0.75):
 
   return x_train, x_test, y_train, y_test
 
-x_train, x_test, y_train, y_test = preprocessing_data()
+# Use the 'preparing_data_for_ML' function to return x_train, x_test, y_train, y_test 
+x_train, x_test, y_train, y_test = preparing_data_for_ML()
 
 
 ## K-Nearest Neighbours
@@ -436,6 +437,8 @@ plt.savefig('knn_learning.jpg', dpi=300)
 plt.show()
 
 
+
+
 ## LightGBM
 # LightGBM is a gradient boosting framework that uses tree based learning algorithms.
 lgbm = LGBMRegressor()
@@ -504,12 +507,14 @@ plt.savefig('lgbm_learning.jpg', dpi=300)
 plt.show()
 
 
+
+
 ## Random Forest
 # Random Forest is an algorithm that is build on multiple decision trees. It can be used both for classification and regression problems.
 
 rfm = RandomForestRegressor()
-parameters = {    'n_estimators' : [None, 100 , 500, 1000], 
-                  'max_depth'    : [2, 3, 5, None]
+parameters = {    'n_estimators' : [None, 100 , 300, 1000], 
+                  'max_depth'    : [2, 4, 6, None]
                  }
 
 grid_rfm = GridSearchCV(estimator=rfm, param_grid = parameters, cv = 3, n_jobs=-1)
@@ -572,3 +577,18 @@ plt.legend(loc="best")
 plt.savefig('random_forest_learning.jpg', dpi=300) 
 plt.show()
 
+# That's the end! Thanks for checking out the code all the way to here. 
+# I hope you enjoyed it and learned something new. If you have any questions or suggestions, 
+# please do reach out on Twitter! I'm @thijsverreck
+#
+#
+#   _____  _      _   _                                           _    
+# /__   \| |__  (_) (_) ___    /\   /\ ___  _ __  _ __  ___   ___ | | __
+#   / /\/| '_ \ | | | |/ __|   \ \ / // _ \| '__|| '__|/ _ \ / __|| |/ /
+#  / /   | | | || | | |\__ \    \ V /|  __/| |   | |  |  __/| (__ |   < 
+#  \/    |_| |_||_|_/ ||___/     \_/  \___||_|   |_|   \___| \___||_|\_\
+#                 |__/    
+# 
+# 
+# 
+#                 
