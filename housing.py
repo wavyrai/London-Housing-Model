@@ -1,23 +1,25 @@
 ## Author: Thijs Verreck
 ## Importing all the necessary libraries
 
-import numpy as np
-import pandas as pd
-from pandas.plotting import scatter_matrix
-import geopandas as gpd
+import numpy as np # For the linear algebra
+import pandas as pd # Pandas, what else? 
+from pandas.plotting import scatter_matrix # For the scatter matrix 
 import matplotlib.pyplot as plt
 # Set the fonts for the plots
+# If you dont have the fonts installed, you can replace them with any other font you have installed. 
 bodyfont = {'fontname':'Helvetica'} # Body font 
-titlefont = {'fontname':'Futura'} # Title font
+titlefont = {'fontname':'Futura'} # Title font (Futura is a premium font, you can comment this line and uncomment the next line if you dont have it installed)
+# titlefont = {'fontname':'Helvetica'} # Uncomment this line if you dont have the Futura font installed 
 
-import seaborn as sns
+import seaborn as sns # For the heatmap
 from IPython.display import HTML
-import warnings
+import warnings 
 warnings.filterwarnings('ignore') # get rid of annoying warnings
-import plotly.express as px
-import geopandas as gpd
+import plotly.express as px # For the interactive map, allows you to zoom in and out (and export to JSON)
+import geopandas as gpd # For the map
 
 # Importing the necessary libraries for the machine learning part
+# Most come from the scikit-learn library
 from sklearn.model_selection import GridSearchCV
 from  sklearn.model_selection import train_test_split 
 from sklearn.model_selection import GridSearchCV
@@ -54,7 +56,7 @@ london_monthly_zero = pd.concat([london_monthly_zero, percent], axis = 1, keys =
 print ('These columns have missing data: ')
 london_monthly_zero.head()
 
-# get rid off the 'no_of_crimes' column
+# get rid off the 'no_of_crimes' column, because it has too many missing values
 london_monthly.drop('no_of_crimes', axis = 1, inplace = True)   
 
 # Fill the missing values in the 'houses_sold' column with the mean of the area
@@ -76,15 +78,15 @@ london_boroughs = london_monthly[london_monthly['borough_flag'] == 1]['area'].un
 len(london_boroughs)
 
 # What are 33 London boroughs? Let's print them with a loop. 
-for i, name in enumerate(london_boroughs):
-  print(i+1,':', name)
+for i, borough in enumerate(london_boroughs):
+  print(i+1,':', borough)
 
 # Let's also check the areas that are not London boroughs
 print(london_monthly[london_monthly['borough_flag'] == 0]['area'].nunique()) 
 print(london_monthly[london_monthly['borough_flag'] == 0]['area'].unique())
 
 # Let's get rid of the non-english regions. 
-england_regions = ['south west', 'south east', 'east of england', 'west midlands', 'east midlands', 'yorks and the humber', 'north west', 'north east']
+england_regions = ['east midlands', 'yorks and the humber', 'south west', 'south east', 'east of england', 'west midlands', 'north west', 'north east']
 london = london_monthly[london_monthly['area'].isin(london_boroughs)]
 england = london_monthly[london_monthly['area'].isin(england_regions)]
 
@@ -307,6 +309,8 @@ london_total.head()
 corr_table = london_total.corr()
 corr_table['average_price'].sort_values(ascending = False)
 
+# Creating a heatmap of the correlations
+
 plt.figure(figsize = (15, 11))
 
 mask = np.triu(np.ones_like(corr_table, dtype = np.bool))
@@ -318,6 +322,8 @@ htmap.set_yticklabels(htmap.get_yticklabels(), rotation = 0, horizontalalignment
 bottom, top = htmap.get_ylim()
 htmap.set_ylim(bottom + 0.5, top - 0.5);
 
+# Saving the heatmap, with 300 dpi. This argument is optional, but it will make the image look better.
+
 plt.savefig('heatmap_of_pairwise_corr.jpg', dpi=300) 
 
 columns = ['average_price', 'median_salary', 'mean_salary', 'number_of_jobs']
@@ -328,7 +334,7 @@ scatter_matrix(london_total[columns], figsize = (15, 15), color = '#D52B06', alp
 ## ML modelling 
 # Preprocessing data
 
-def preprocessing_data(df = london_monthly, training_size = 0.8):
+def preprocessing_data(df = london_monthly, training_size = 0.75):
   # Drop unneccessary features
   df_predict = df.drop(columns =['code','houses_sold','borough_flag'])
 
@@ -363,26 +369,27 @@ x_train, x_test, y_train, y_test = preprocessing_data()
 
 
 ## K-Nearest Neighbours
+# KNN is a non-parametric method used for classification and regression.
 knn = KNeighborsRegressor()
-parameters = {'n_neighbors' : [2, 3, 5, 7],
+parameters = {'n_neighbors' : [2, 4, 6, 8], 
                'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute'] ,
                }
 
 grid_knn = GridSearchCV(estimator= knn, param_grid = parameters, cv = 3, n_jobs=-1)
 grid_knn.fit(x_train, y_train)
 
-# Print Best hyperparameters
+# Print the best hyperparameters:
 print(" Results from Grid Search " )
 print("\n The best estimator across ALL searched params:\n",grid_knn.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_knn.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_knn.best_params_)
 
 
-# Fitting with best params
+# Fitting with parameters
 knn_ft = grid_knn.best_estimator_
 knn_ft.fit(x_train, y_train)
 
-
+# Printing the results
 predictions = knn_ft.predict(x_test)
 mse = mean_squared_error(y_test, predictions)
 print("MSE:", mse)
@@ -406,6 +413,7 @@ plt.savefig('knn.jpg', dpi=300)
 plt.show()
 
 # Plot KNN learning curve
+# I use the sklearn learning curve function to plot the learning curve: 
 train_sizes, train_scores, test_scores = learning_curve(
     estimator=knn_ft, X=x_train, y=y_train, cv=5, n_jobs=-1,
     train_sizes=np.linspace(0.1, 1.0, 10), scoring='neg_mean_squared_error')
@@ -429,7 +437,7 @@ plt.show()
 
 
 ## LightGBM
-
+# LightGBM is a gradient boosting framework that uses tree based learning algorithms.
 lgbm = LGBMRegressor()
 parameters = {'boosting_type' : ['gbdt', "dart", 'goss'],
                'learning_rate': [0.01, 0.03, 0.1] ,
@@ -438,7 +446,7 @@ parameters = {'boosting_type' : ['gbdt', "dart", 'goss'],
 grid_lgbm = GridSearchCV(estimator=lgbm, param_grid = parameters, cv = 3, n_jobs=-1)
 grid_lgbm.fit(x_train, y_train)
 
-# Print Best hyperparameters
+# Print the best hyperparameters:
 print(" Results from Grid Search " )
 print("\n The best estimator across ALL searched params:\n",grid_lgbm.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_lgbm.best_score_)
@@ -447,6 +455,7 @@ print("\n The best parameters across ALL searched params:\n",grid_lgbm.best_para
 lgbm_ft = grid_lgbm.best_estimator_
 lgbm_ft.fit(x_train, y_train)
 
+# Printing the results
 predictions = lgbm_ft.predict(x_test)
 mse = mean_squared_error(y_test, predictions)
 print("MSE:", mse)
@@ -461,6 +470,7 @@ plt.scatter(y_test, predictions, color = 'darkorange', alpha=0.5)
 plt.xlabel('Actual Labels', **bodyfont)
 plt.ylabel('Predicted Labels', **bodyfont)
 plt.title('LGBM', fontsize= 20, **titlefont)
+
 # overlay the regression line
 z = np.polyfit(y_test, predictions, 1)
 p = np.poly1d(z)
@@ -469,8 +479,8 @@ plt.savefig('lgbm.jpg', dpi=300)
 plt.show()
 
 
-# Plot LGBM learning curve
-
+## Plot LGBM learning curve
+# I use the sklearn learning curve function to plot the learning curve:
 train_sizes, train_scores, test_scores = learning_curve(
     estimator=lgbm_ft, X=x_train, y=y_train, cv=5, n_jobs=-1,
     train_sizes=np.linspace(0.1, 1.0, 10), scoring='neg_mean_squared_error')
@@ -480,6 +490,7 @@ train_scores_std = np.std(train_scores, axis=1)
 test_scores_mean = np.mean(test_scores, axis=1)
 test_scores_std = np.std(test_scores, axis=1)
 
+# Creating the plot | learning curve
 plt.figure(figsize=(7, 4))
 plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="steelblue")
 plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="orange")
@@ -494,22 +505,27 @@ plt.show()
 
 
 ## Random Forest
+# Random Forest is an algorithm that is build on multiple decision trees. It can be used both for classification and regression problems.
+
 rfm = RandomForestRegressor()
-parameters = {    'n_estimators' : [None, 100 , 500, 1000],
+parameters = {    'n_estimators' : [None, 100 , 500, 1000], 
                   'max_depth'    : [2, 3, 5, None]
                  }
 
 grid_rfm = GridSearchCV(estimator=rfm, param_grid = parameters, cv = 3, n_jobs=-1)
 grid_rfm.fit(x_train, y_train)
 
+# Print the best hyperparameters:
 print(" Results from Grid Search " )
 print("\n The best estimator across ALL searched params:\n",grid_rfm.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_rfm.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_rfm.best_params_)
 
+# Fit the model with the best hyperparameters
 rfm_ft = grid_rfm.best_estimator_
 rfm_ft.fit(x_train, y_train)
 
+# Printing the results
 predictions = rfm_ft.predict(x_test)
 mse = mean_squared_error(y_test, predictions)
 print("MSE:", mse)
@@ -531,8 +547,8 @@ plt.plot(y_test,p(y_test), color='navy', linewidth=2, label='Regression Line')
 plt.savefig('random_forest.jpg', dpi=300) 
 plt.show()
 
-# Plot Random Forest learning curve
-
+## Plot Random Forest learning curve
+# Same here as above, I use the sklearn learning curve function to plot the learning curve: 
 train_sizes, train_scores, test_scores = learning_curve(
     estimator=rfm_ft, X=x_train, y=y_train, cv=5, n_jobs=-1,
     train_sizes=np.linspace(0.1, 1.0, 10), scoring='neg_mean_squared_error')
@@ -542,6 +558,8 @@ train_scores_std = np.std(train_scores, axis=1)
 test_scores_mean = np.mean(test_scores, axis=1)
 test_scores_std = np.std(test_scores, axis=1)
 
+
+# Creating the plot | learning curve 
 plt.figure(figsize=(7, 4))
 plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1, color="steelblue")
 plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1, color="orange")
