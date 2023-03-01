@@ -44,7 +44,7 @@ london_monthly = pd.read_csv('housing_in_london_monthly_variables.csv', parse_da
 
 # Print the first five rows of the dataset
 print ('This dataset contains {} rows and {} columns.'.format(london_monthly.shape[0], london_monthly.shape[1]))
-london_monthly.head()
+london_monthly.head(5)
 
 # Print the data types of each column
 london_monthly.info()
@@ -54,7 +54,7 @@ london_monthly_zero = london_monthly.isnull().sum().sort_values(ascending = Fals
 percent = (london_monthly.isnull().sum()/london_monthly.isnull().count()).sort_values(ascending = False)*100
 london_monthly_zero = pd.concat([london_monthly_zero, percent], axis = 1, keys = ['Counts', '% Missing'])
 print ('These columns have missing data: ')
-london_monthly_zero.head()
+london_monthly_zero.head(5) # 
 
 # get rid off the 'no_of_crimes' column, because it has too many missing values
 london_monthly.drop('no_of_crimes', axis = 1, inplace = True)   
@@ -379,7 +379,7 @@ grid_knn = GridSearchCV(estimator= knn, param_grid = parameters, cv = 3, n_jobs=
 grid_knn.fit(x_train, y_train)
 
 # Print the best hyperparameters:
-print(" Results from Grid Search " )
+print(" Results from Grid Search for KNN " )
 print("\n The best estimator across ALL searched params:\n",grid_knn.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_knn.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_knn.best_params_)
@@ -447,7 +447,7 @@ grid_lgbm = GridSearchCV(estimator=lgbm, param_grid = parameters, cv = 3, n_jobs
 grid_lgbm.fit(x_train, y_train)
 
 # Print the best hyperparameters:
-print(" Results from Grid Search " )
+print(" Results from Grid Search for LGBM " )
 print("\n The best estimator across ALL searched params:\n",grid_lgbm.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_lgbm.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_lgbm.best_params_)
@@ -516,7 +516,7 @@ grid_rfm = GridSearchCV(estimator=rfm, param_grid = parameters, cv = 3, n_jobs=-
 grid_rfm.fit(x_train, y_train)
 
 # Print the best hyperparameters:
-print(" Results from Grid Search " )
+print(" Results from Grid Search for RandomForest " )
 print("\n The best estimator across ALL searched params:\n",grid_rfm.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_rfm.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_rfm.best_params_)
