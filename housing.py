@@ -205,17 +205,15 @@ plt.show
 # Let's see how the number of houses sold in London has changed over time 
 plt.figure(figsize = (10, 5))
 london_houses = london.groupby('date')['houses_sold'].sum()
-london_houses.plot(figsize = (9, 5), lw = 2, y = 'houses_sold', color = '#00072D')
-
-plt.axvspan('2007-12-21', '2009-06-21', alpha = 0.5, color = '#F08700')
-plt.text(x = '2008-04-01', y = 10700, s = 'Recession', rotation = 90, fontsize = font_size-2, **bodyfont)
-plt.axvspan('2016-01-1', '2016-05-01', alpha = 0.7, color = '#FFCAAF')
-plt.text(x = '2016-06-01', y = 10000, s = 'New Tax Legislation', rotation = 90, fontsize = font_size-2, **bodyfont)
-
-plt.title('Houses sold in London by date', size = font_size, **titlefont)
+london_houses.plot(figsize = (9, 5), lw = 2, y = 'houses_sold', color = 'darkorange')
+plt.axvspan('2007-12-21', '2009-06-21', alpha = 0.5, color = 'orange')
+plt.text(x = '2009-12-01', y = 10700, s = 'The GFC', rotation = 90, fontsize = font_size-2, **bodyfont)
+plt.axvspan('2015-12-15', '2016-08-01', alpha = 0.7, color = 'orange')
+plt.text(x = '2016-12-01', y = 10000, s = '2016 Tax Legislation ', rotation = 90, fontsize = font_size-2, **bodyfont)
+plt.title('Number of houses sold per month', size = font_size, **titlefont)
 plt.xlabel('Date', size = font_size, **bodyfont)
 plt.xticks(size = font_size - 3, **bodyfont)
-plt.ylabel('Houses sold', size = font_size, **bodyfont)
+plt.ylabel('Number of houses sold', size = font_size, **bodyfont)
 plt.yticks([4000, 8000, 12000, 16000], size = font_size - 3, **bodyfont)
 plt.savefig('houses_sold_lnd_date.jpg', dpi=300) 
 
@@ -257,9 +255,9 @@ london_map.head()
 
 fig, htmap = plt.subplots(1, 2, figsize = (15, 12))
 
-london_map.plot(ax = htmap[0], column = 'average_price', cmap = 'Oranges', edgecolor = 'maroon', legend = True, legend_kwds = {'label': 'Average Price', 'orientation' : 'horizontal'})
+london_map.plot(ax = htmap[0], column = 'average_price', cmap = 'Oranges', edgecolor = 'DarkOrange', legend = True, legend_kwds = {'label': 'Average Price', 'orientation' : 'horizontal'})
 
-london_map.plot(ax = htmap[1], column = 'houses_sold', cmap = 'Greens', edgecolor = 'maroon', legend = True, legend_kwds = {'label': 'Houses Sold', 'orientation' : 'horizontal'})
+london_map.plot(ax = htmap[1], column = 'houses_sold', cmap = 'Greens', edgecolor = 'DarkGreen', legend = True, legend_kwds = {'label': 'Houses Sold', 'orientation' : 'horizontal'})
 
 htmap[0].axis('off')
 htmap[0].set_title('Average House Price (All years)', size = font_size, **titlefont)
