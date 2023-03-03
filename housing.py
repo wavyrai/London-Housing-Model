@@ -40,7 +40,7 @@ from sklearn.model_selection import learning_curve
 ## Importing the data
 
 # Read the data
-london_monthly = pd.read_csv('housing_in_london_monthly_variables.csv', parse_dates = ['date'])
+london_monthly = pd.read_csv('housing_in_london_monthly_variables.csv', parse_dates = ['date']) # The data set is from Justin Cirtautas. Link in the README.md file.
 
 # Print the first five rows of the dataset
 print ('This dataset contains {} rows and {} columns.'.format(london_monthly.shape[0], london_monthly.shape[1]))
@@ -335,7 +335,10 @@ scatter_matrix(london_total[columns], figsize = (15, 15), color = '#D52B06', alp
 # Preparing the data and splitting it into train and test sets
 
 def preparing_data_for_ML(df = london_monthly, training_size = 0.75):
-  # Drop unneccessary features
+  # Drop unneccessary features, in this case 'borough_flag' and 'code' and 'houses_sold'. 
+  # 'borough_flag' is a flag that indicates whether the area is a London borough or not.
+  # 'code' is the code of the area.
+  # 'houses_sold' is the number of houses sold in the area.
   prepared_df = df.drop(columns =['houses_sold','borough_flag', 'code'])
 
   # Extract date feature
@@ -343,9 +346,9 @@ def preparing_data_for_ML(df = london_monthly, training_size = 0.75):
   prepared_df['month'] = prepared_df['date'].apply(lambda x: x.month)
   prepared_df = prepared_df.drop(columns =['date'])
 
-  # one hot encoding
-  ohe = pd.get_dummies(prepared_df['area'], drop_first= True)
-  prepared_df = pd.concat([prepared_df,ohe], axis =1)
+  # One-hot encoding for area 
+  hot_one = pd.get_dummies(prepared_df['area'], drop_first= True)
+  prepared_df = pd.concat([prepared_df, hot_one], axis =1)
   prepared_df = prepared_df.drop(columns =['area'], axis =1)
  
 
@@ -354,7 +357,7 @@ def preparing_data_for_ML(df = london_monthly, training_size = 0.75):
   y = prepared_df['average_price']
 
 
-  # Train-test split (train data 80%)
+  # Train-test split (train data 75%, test data 25%)
   x_train, x_test, y_train, y_test = train_test_split(x, y, train_size= training_size, shuffle=True, random_state=42)
 
   # Standard scaling x
