@@ -44,7 +44,7 @@ You can use the following steps to set up a virtual environment using venv:
 
     pip install 'package-name'
     
-After setting up the virtual environment, you can run the code in the Jupyter notebook or using Python scripts.
+After setting up the virtual environment, you can run the code in the housing.py file using your virtual environment.
 
 # Author
 - This repository was created by [Thijs Verreck](https://twitter.com/thijsverreck).
