@@ -383,7 +383,8 @@ grid_knn = GridSearchCV(estimator= knn, param_grid = parameters, cv = 3, n_jobs=
 grid_knn.fit(x_train, y_train)
 
 # Print the best hyperparameters:
-print(" Results from Grid Search for KNN " )
+print("\n =========== (1) ==========" )
+print("\n Results from Grid Search for KNN " )
 print("\n The best estimator across ALL searched params:\n",grid_knn.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_knn.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_knn.best_params_)
@@ -453,7 +454,8 @@ grid_lgbm = GridSearchCV(estimator=lgbm, param_grid = parameters, cv = 3, n_jobs
 grid_lgbm.fit(x_train, y_train)
 
 # Print the best hyperparameters:
-print(" Results from Grid Search for LGBM " )
+print("\n =========== (2) ==========" )
+print("\n Results from Grid Search for LGBM " )
 print("\n The best estimator across ALL searched params:\n",grid_lgbm.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_lgbm.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_lgbm.best_params_)
@@ -524,7 +526,8 @@ grid_rfm = GridSearchCV(estimator=rfm, param_grid = parameters, cv = 3, n_jobs=-
 grid_rfm.fit(x_train, y_train)
 
 # Print the best hyperparameters:
-print(" Results from Grid Search for RandomForest " )
+print("\n =========== (3) ==========" )
+print("\n Results from Grid Search for RandomForest " )
 print("\n The best estimator across ALL searched params:\n",grid_rfm.best_estimator_)
 print("\n The best score across ALL searched params:\n",grid_rfm.best_score_)
 print("\n The best parameters across ALL searched params:\n",grid_rfm.best_params_)
